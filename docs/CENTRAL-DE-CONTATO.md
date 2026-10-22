@@ -96,3 +96,13 @@ Não há gravação de áudio provisionada nem discador preditivo/AMD, fila de d
 ## Verificação e limites
 
 Foram usados provedores simulados nos testes de contrato; nenhuma mensagem real foi enviada e nenhum telefone foi chamado. Não foi validada a qualidade/latência da IA nem a operação SIP com uma conta real. Confira `COBERTURA.md` na pasta de entregáveis para distinguir telas reproduzidas de fluxos não verificados no Squad.
+
+## Operar a caixa de conversas
+
+Em **Meu workspace → Conversas**, use **Nova conversa** para buscar um contato no Chatwoot ou cadastrar nome e telefone internacional/e-mail. Selecione um canal compatível e abra o atendimento. Isso cria uma conversa `open`, sem mensagem inicial automática. Escreva e envie a primeira mensagem no editor.
+
+WhatsApp, SMS, Twilio, e-mail, API e WebWidget têm suporte de início de conversa no adaptador, conforme a API fixada do Chatwoot. Canais que exigem que o cliente inicie o contato aparecem desabilitados. Regras de modelos, permissões e janelas de atendimento do provedor continuam sendo aplicadas; criar uma conversa não significa que uma mensagem foi entregue.
+
+**Carregar mais conversas** pagina a lista conforme o filtro de status. A busca da lista filtra as conversas já carregadas. **Carregar mensagens anteriores** recupera páginas antigas e mantém o histórico durante atualizações automáticas. O modal de novo atendimento também permite buscar e paginar contatos.
+
+O item **Ativar atendimento** no menu abre o checklist com status de conexão e links oficiais. “Configurado” indica configuração presente, não teste de operação concluído. Como o usuário ainda não possui contas de provedores, a publicação continua sem telefonia/mensagens reais.

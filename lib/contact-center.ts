@@ -33,8 +33,9 @@ export function contactMetrics(entities:Entity[]){
 }
 export const durationLabel=(seconds:number)=>`${Math.floor(seconds/60).toString().padStart(2,'0')}:${(seconds%60).toString().padStart(2,'0')}`;
 
-export async function contactRequest(op:string,data?:Record<string,any>){
-  const response=await fetch('/api/contact-center'+(data?'':'?op='+encodeURIComponent(op)),{method:data?'POST':'GET',headers:data?{'Content-Type':'application/json'}:undefined,body:data?JSON.stringify({op,...data}):undefined});
+export async function contactRequest(op:string,data?:Record<string,any>,params:Record<string,string>={}){
+  const query=new URLSearchParams({...params,op});
+  const response=await fetch('/api/contact-center'+(data?'':'?'+query),{method:data?'POST':'GET',headers:data?{'Content-Type':'application/json'}:undefined,body:data?JSON.stringify({op,...data}):undefined});
   const body=await response.json() as any;
   if(!response.ok)throw new Error(body.error||'Não foi possível acessar a central.');
   return body;

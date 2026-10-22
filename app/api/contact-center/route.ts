@@ -1,6 +1,7 @@
 import {env} from 'cloudflare:workers';
 import {getChatGPTUser} from '../../chatgpt-auth';
 import {validateCallCommand} from '../../../lib/contact-center';
+import {messagingQuery,validateNewContact,validateNewConversation} from '../../../lib/messaging';
 export const dynamic='force-dynamic';
 const reply=(data:any,status=200)=>Response.json(data,{status,headers:{'Cache-Control':'no-store'}});
 const validId=(value:any)=>typeof value==='string'&&/^\d{1,15}$/.test(value);
@@ -19,8 +20,10 @@ export async function GET(request:Request){
   if(op==='status')return await relay('/status',user.userId);
   if(op==='calls')return await relay('/calls',user.userId);
   if(op==='agent')return await relay('/agent',user.userId);
-  if(op==='conversations')return await relay('/conversations',user.userId);
-  if(op.startsWith('messages:')&&validId(op.slice(9)))return await relay('/conversations/'+op.slice(9)+'/messages',user.userId);
+  if(['conversations','contacts','inboxes'].includes(op)||op.startsWith('messages:')){
+   let path;try{path=messagingQuery(op,Object.fromEntries(params));}catch(e){return reply({error:e instanceof Error?e.message:'Parâmetros inválidos.'},400);}
+   return await relay(path,user.userId);
+  }
   return reply({error:'Operação inválida.'},400);
  }catch{return reply({error:'O serviço de atendimento está indisponível. Tente novamente.'},502);}
 }
@@ -30,6 +33,8 @@ export async function POST(request:Request){
  try{
   const raw=await request.text();if(raw.length>90000)return reply({error:'Solicitação muito grande.'},413);
   const input=JSON.parse(raw);
+  if(input.op==='create-contact')return await relay('/contacts',user.userId,'POST',validateNewContact(input));
+  if(input.op==='create-conversation')return await relay('/conversations',user.userId,'POST',validateNewConversation(input));
   if(input.op==='call'){
    const command=validateCallCommand(input);
    if(command.action==='start'||command.action==='test')return await relay('/calls',user.userId,'POST',command);

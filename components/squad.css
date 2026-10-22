@@ -6,3 +6,30 @@
 @media print{.sq-sidebar,.modal-heading,.modal-actions,.sq-record-detail>.btn,.sq-app .main-frame>main,.toast{display:none!important}.modal-backdrop{position:static;background:#fff;backdrop-filter:none;padding:0}.modal{box-shadow:none;border:0;max-height:none;width:100%}.modal-body{overflow:visible}.sq-record-detail{display:block!important}.sq-app .main-frame{margin:0}.sq-app .modal-backdrop{display:block!important}}
 
 .sq-finance-period select{width:auto;border:1px solid #eee;border-radius:20px;padding:8px 28px 8px 12px;font-size:11px;color:#666;min-height:30px}
+
+/* Keep navigation scrolling separate from the workspace controls. */
+.sq-sidebar{height:100dvh;overflow:hidden}
+.sq-company,.sq-sidebar-bottom{flex-shrink:0}
+.sq-sidebar-scroll{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;margin:0 -8px;padding:0 8px;scrollbar-width:thin;scrollbar-color:transparent transparent}
+.sq-sidebar-scroll:hover,.sq-sidebar-scroll:focus-within{scrollbar-color:#c6c8c2 transparent}
+.sq-sidebar-scroll::-webkit-scrollbar{width:4px}
+.sq-sidebar-scroll::-webkit-scrollbar-track{background:transparent}
+.sq-sidebar-scroll::-webkit-scrollbar-thumb{background:transparent;border-radius:8px}
+.sq-sidebar-scroll:hover::-webkit-scrollbar-thumb,.sq-sidebar-scroll:focus-within::-webkit-scrollbar-thumb{background:#c6c8c2}
+.sq-sidebar-bottom{margin-top:0;padding-top:12px;background:#fff;border-top:1px solid #f2f2ef}
+.sq-app,.sq-app *{scrollbar-width:thin;scrollbar-color:#d0d2cb transparent}
+.sq-app ::-webkit-scrollbar{width:5px;height:5px}
+.sq-app ::-webkit-scrollbar-track{background:transparent}
+.sq-app ::-webkit-scrollbar-thumb{background:#d0d2cb;border-radius:8px}
+.sq-app ::-webkit-scrollbar-thumb:hover{background:#a9ada3}
+.sq-app .sq-sidebar-scroll{scrollbar-color:transparent transparent}
+.sq-app .sq-sidebar-scroll:hover,.sq-app .sq-sidebar-scroll:focus-within{scrollbar-color:#c6c8c2 transparent}
+.sq-app .page-content.page-settings,.sq-app .page-content.page-business{padding:32px 38px}
+@media(max-width:700px){.sq-app .page-content.page-settings,.sq-app .page-content.page-business{padding:22px 18px}}
+.sq-app .sq-sidebar-scroll::-webkit-scrollbar{width:4px}
+.sq-app .sq-sidebar-scroll::-webkit-scrollbar-thumb{background:transparent}
+.sq-app .sq-sidebar-scroll:hover::-webkit-scrollbar-thumb,.sq-app .sq-sidebar-scroll:focus-within::-webkit-scrollbar-thumb{background:#c6c8c2}
+html:has(.sq-app){scrollbar-width:thin;scrollbar-color:#d0d2cb transparent}
+html:has(.sq-app)::-webkit-scrollbar{width:5px;height:5px}
+html:has(.sq-app)::-webkit-scrollbar-thumb{background:#d0d2cb;border-radius:8px}
+@supports selector(::-webkit-scrollbar){html:has(.sq-app),.sq-app *{scrollbar-width:auto;scrollbar-color:auto}}
