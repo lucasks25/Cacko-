@@ -1,0 +1,93 @@
+name: fluxo-contact
+services:
+  contact-center:
+    build: ../services/contact-center
+    env_file: .env
+    environment:
+      DATABASE_PATH: /data/contact-center.sqlite
+      SERVICE_INTERNAL_URL: http://contact-center:8090
+    ports:
+      - '127.0.0.1:${CONTACT_CENTER_PORT:-8090}:8090'
+    volumes: [contact_data:/data]
+    restart: unless-stopped
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8090/health')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+  voice-agent:
+    profiles: [voice]
+    build: ../services/contact-center
+    env_file: .env
+    environment:
+      SERVICE_INTERNAL_URL: http://contact-center:8090
+    command: [python, -m, app.voice_agent, start]
+    depends_on:
+      contact-center: {condition: service_healthy}
+    restart: unless-stopped
+  chatwoot:
+    profiles: [chatwoot]
+    image: '${CHATWOOT_IMAGE:-chatwoot/chatwoot:v4.19.0}'
+    env_file: .env
+    environment: &chatwoot-env
+      NODE_ENV: production
+      RAILS_ENV: production
+      INSTALLATION_ENV: docker
+      ENABLE_ACCOUNT_SIGNUP: 'false'
+      POSTGRES_HOST: postgres
+      POSTGRES_DATABASE: chatwoot
+      POSTGRES_USERNAME: postgres
+      REDIS_URL: redis://redis:6379
+      ACTIVE_STORAGE_SERVICE: local
+      RAILS_LOG_TO_STDOUT: 'true'
+    entrypoint: docker/entrypoints/rails.sh
+    command: [bundle, exec, rails, s, -p, '3000', -b, 0.0.0.0]
+    ports: ['127.0.0.1:${CHATWOOT_PORT:-3000}:3000']
+    volumes: [chatwoot_storage:/app/storage]
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+    restart: unless-stopped
+  sidekiq:
+    profiles: [chatwoot]
+    image: '${CHATWOOT_IMAGE:-chatwoot/chatwoot:v4.19.0}'
+    env_file: .env
+    environment: *chatwoot-env
+    command: [bundle, exec, sidekiq, -C, config/sidekiq.yml]
+    volumes: [chatwoot_storage:/app/storage]
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+    restart: unless-stopped
+  postgres:
+    profiles: [chatwoot]
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_DB: chatwoot
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: '${POSTGRES_PASSWORD:?Defina POSTGRES_PASSWORD no .env}'
+    volumes: [postgres_data:/var/lib/postgresql/data]
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U postgres -d chatwoot']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+  redis:
+    profiles: [chatwoot]
+    image: redis:7-alpine
+    environment:
+      REDIS_PASSWORD: '${REDIS_PASSWORD:?Defina REDIS_PASSWORD no .env}'
+    command: [sh, -c, 'exec redis-server --requirepass "$$REDIS_PASSWORD"']
+    volumes: [redis_data:/data]
+    healthcheck:
+      test: [CMD-SHELL, 'REDISCLI_AUTH="$$REDIS_PASSWORD" redis-cli ping | grep PONG']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+volumes:
+  contact_data:
+  chatwoot_storage:
+  postgres_data:
+  redis_data:

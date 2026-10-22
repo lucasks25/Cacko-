@@ -1,0 +1,79 @@
+{
+  "consulted_on": "2026-10-21",
+  "repositories": [
+    {
+      "full_name": "chatwoot/chatwoot",
+      "stargazers_count": 38075,
+      "default_branch": "develop",
+      "pushed_at": "2026-10-22T02:34:38Z",
+      "license": {
+        "key": "other",
+        "name": "Other",
+        "spdx_id": "NOASSERTION",
+        "url": null,
+        "node_id": "MDc6TGljZW5zZTA="
+      },
+      "html_url": "https://github.com/chatwoot/chatwoot",
+      "release": "v4.19.0",
+      "commit": "ad89249fef0c0e5c8190b070812a69f3d48443a6"
+    },
+    {
+      "full_name": "livekit/agents",
+      "stargazers_count": 14886,
+      "default_branch": "main",
+      "pushed_at": "2026-10-22T00:19:24Z",
+      "license": {
+        "key": "apache-2.0",
+        "name": "Apache License 2.0",
+        "spdx_id": "Apache-2.0",
+        "url": "https://api.github.com/licenses/apache-2.0",
+        "node_id": "MDc6TGljZW5zZTI="
+      },
+      "html_url": "https://github.com/livekit/agents",
+      "release": "livekit-agents@1.8.8",
+      "commit": "31c6026df14eebb71975c16ca6a422ce68644b71"
+    },
+    {
+      "full_name": "livekit/livekit",
+      "stargazers_count": 21725,
+      "default_branch": "master",
+      "pushed_at": "2026-10-22T02:49:27Z",
+      "license": {
+        "key": "apache-2.0",
+        "name": "Apache License 2.0",
+        "spdx_id": "Apache-2.0",
+        "url": "https://api.github.com/licenses/apache-2.0",
+        "node_id": "MDc6TGljZW5zZTI="
+      },
+      "html_url": "https://github.com/livekit/livekit"
+    },
+    {
+      "full_name": "pipecat-ai/pipecat",
+      "stargazers_count": 16700,
+      "default_branch": "main",
+      "pushed_at": "2026-10-22T02:21:26Z",
+      "license": {
+        "key": "bsd-2-clause",
+        "name": "BSD 2-Clause \"Simplified\" License",
+        "spdx_id": "BSD-2-Clause",
+        "url": "https://api.github.com/licenses/bsd-2-clause",
+        "node_id": "MDc6TGljZW5zZTQ="
+      },
+      "html_url": "https://github.com/pipecat-ai/pipecat"
+    },
+    {
+      "full_name": "twentyhq/twenty",
+      "stargazers_count": 59235,
+      "default_branch": "main",
+      "pushed_at": "2026-10-22T00:49:18Z",
+      "license": {
+        "key": "other",
+        "name": "Other",
+        "spdx_id": "NOASSERTION",
+        "url": null,
+        "node_id": "MDc6TGljZW5zZTA="
+      },
+      "html_url": "https://github.com/twentyhq/twenty"
+    }
+  ]
+}

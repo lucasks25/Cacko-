@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { validateEntity, parseCSV, exportCSV, getMetrics, evaluateFlow, prepareWrite } from '../lib/domain.ts';
+import { validateEntity, parseCSV, exportCSV, getMetrics, evaluateFlow, prepareWrite, validateReferences, resolveOwner } from '../lib/domain.ts';
 import type {Entity} from '../lib/types.ts';
 const entity = (type:Entity['type'],data:any,id='e1'):Entity=>({id,type,data,revision:1,updatedAt:'2026-10-21T12:00:00Z',deleted:false});
 test('rejects empty lead and invalid deal values',()=>{
@@ -32,4 +32,27 @@ test('flow conditions gate actions and never claim external delivery',()=>{
 test('revision conflicts do not silently overwrite data',()=>{
   const e=entity('lead',{name:'Ana'});assert.throws(()=>prepareWrite({type:'lead',data:{name:'Bia'},revision:0},e),/conflito/i);
   const out=prepareWrite({type:'lead',data:{name:'Bia'},revision:1},e);assert.equal(out.revision,2);assert.equal(out.data.name,'Bia');
+});
+test('existing archived relationships remain editable but new links cannot target archived records',()=>{
+  const lead={...entity('lead',{name:'Ana'},'l1'),deleted:true};const task=entity('task',{title:'Ligar',leadId:'l1'},'t1');
+  assert.doesNotThrow(()=>validateReferences('task',{...task.data,done:true},[lead,task],task));
+  assert.throws(()=>validateReferences('task',{title:'Outra',leadId:'l1'},[lead,task]),/relacionado/i);
+});
+test('renaming an in-use tag is prevented without dropping membership',()=>{
+  const tag=entity('tag',{name:'Quente'},'tag1');const lead=entity('lead',{name:'Ana',tags:['Quente']},'l1');
+  assert.throws(()=>validateReferences('tag',{name:'Prioritário'},[tag,lead],tag),/uso/i);
+});
+test('rejects nested secrets and invalid flow definitions',()=>{
+  assert.throws(()=>validateEntity('integration',{name:'Meta',config:{access_token:'secret'}}),/credencia/i);
+  assert.throws(()=>validateEntity('automation',{name:'Loop',trigger:'bad',actions:[]}),/gatilho|aç/i);
+});
+test('imported owner names and emails resolve to a stable member ID',()=>{
+  const members=[entity('member',{name:'Ana Silva',email:'ana@example.com'},'m1')];
+  assert.equal(resolveOwner('Ana Silva',members),'m1');assert.equal(resolveOwner('ANA@EXAMPLE.COM',members),'m1');
+  assert.throws(()=>resolveOwner('Desconhecido',members),/responsável/i);
+  assert.throws(()=>resolveOwner('Ana Silva',[...members,entity('member',{name:'Ana Silva'},'m2')]),/ambíguo/i);
+});
+test('incompatible action and trigger combinations cannot claim eligibility',()=>{
+  const result=evaluateFlow({trigger:'lead.created',actions:[{type:'stage',stageId:'s'}]},'lead.created',{name:'Ana'});assert.equal(result.actions.length,0);
+  assert.throws(()=>validateEntity('automation',{name:'Inválida',trigger:'deal.created',actions:[{type:'tag',tag:'VIP'}]}),/gatilho/i);
 });
