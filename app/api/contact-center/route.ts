@@ -20,7 +20,7 @@ export async function GET(request:Request){
   if(op==='status')return await relay('/status',user.userId);
   if(op==='calls')return await relay('/calls',user.userId);
   if(op==='agent')return await relay('/agent',user.userId);
-  if(['conversations','contacts','inboxes'].includes(op)||op.startsWith('messages:')){
+  if(['conversations','contacts','inboxes'].includes(op)||op.startsWith('messages:')||op.startsWith('conversation:')){
    let path;try{path=messagingQuery(op,Object.fromEntries(params));}catch(e){return reply({error:e instanceof Error?e.message:'Parâmetros inválidos.'},400);}
    return await relay(path,user.userId);
   }
@@ -43,6 +43,7 @@ export async function POST(request:Request){
   if(input.op==='message'&&validId(input.conversationId))return await relay('/conversations/'+input.conversationId+'/messages',user.userId,'POST',{text:String(input.text||'').slice(0,10000),private:input.private===true});
   if(input.op==='conversation-status'&&validId(input.conversationId)&&['open','pending','resolved'].includes(input.status))return await relay('/conversations/'+input.conversationId+'/status',user.userId,'POST',{status:input.status});
   if(input.op==='assist'&&validId(input.conversationId)&&['reply','summary'].includes(input.task))return await relay('/assist',user.userId,'POST',{conversationId:input.conversationId,task:input.task});
+  if(input.op==='agent-tool')return await relay('/tools',user.userId,'POST',{agent:input.agent,tool:input.tool,prompt:input.prompt,context:input.context});
   if(input.op==='chat'&&['waz','maky','fin','opy','juri','pipo'].includes(input.agent))return await relay('/chat',user.userId,'POST',{agent:input.agent,messages:input.messages,context:input.context});
   if(input.op==='agent')return await relay('/agent',user.userId,'PUT',{name:input.name,instructions:input.instructions,knowledge:input.knowledge,greeting:input.greeting,autoReply:input.autoReply===true,inboxIds:input.inboxIds});
   return reply({error:'Operação inválida.'},400);

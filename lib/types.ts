@@ -1,7 +1,7 @@
 export const TYPES = ['lead','deal','pipeline','task','conversation','message','automation','agent','campaign','product','connection','integration','member','tag','setting','activity','field','lossReason','list','department','workHours','activityType','parameter','template','boost','knowledge','mcpServer','job','fieldGroup','call','transaction','proposal','contract','vacancy','shift','content','article','chatTurn'] as const;
 export type EntityType = typeof TYPES[number];
 export interface Entity { id: string; type: EntityType; data: Record<string, any>; revision: number; updatedAt: string; deleted: boolean }
-export type CRMPage = 'home'|'tools'|'business'|'assistant'|'proposals'|'finance'|'contracts'|'shifts'|'recruiting'|'marketing'|'wiki'|'central'|'calls'|'ai-center'|'welcome'|'templates'|'dashboard'|'pipelines'|'leads'|'inbox'|'automations'|'agents'|'campaigns'|'tasks'|'products'|'reports'|'connections'|'integrations'|'settings'|'help';
+export type CRMPage = 'contacts-admin'|'home'|'tools'|'business'|'assistant'|'proposals'|'finance'|'contracts'|'shifts'|'recruiting'|'marketing'|'wiki'|'central'|'calls'|'ai-center'|'welcome'|'templates'|'dashboard'|'pipelines'|'leads'|'inbox'|'automations'|'agents'|'campaigns'|'tasks'|'products'|'reports'|'connections'|'integrations'|'settings'|'help';
 export interface CRMContextValue {
   entities: Entity[];
   mode: 'demo'|'live';

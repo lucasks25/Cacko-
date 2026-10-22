@@ -1,4 +1,5 @@
 import { TYPES } from './types.ts';
+import {proposalTotal} from './workspace.ts';
 import type { Entity } from './types.ts';
 export {validateReferences} from './references.ts';
 export function resolveOwner(value:string,rows:Entity[]):string {
@@ -51,7 +52,11 @@ export function validateEntity(type: string, input: any): Record<string,any> {
     if(!/^\d{4}-\d{2}-\d{2}$/.test(data.date||''))throw new Error('Informe a data.');
   }
   if(type==='content'&&['published','active','sending'].includes(data.status))throw new Error('Publicação exige um provedor conectado. Salve como rascunho.');
-  if(type==='proposal'&&(!Array.isArray(data.items)||data.items.some((i:any)=>!Number.isFinite(i.price)||i.price<0||!Number.isFinite(i.quantity)||i.quantity<=0)))throw new Error('Itens da proposta inválidos.');
+  if(type==='proposal'){
+    if(!Array.isArray(data.items)||!data.items.length||data.items.some((i:any)=>!Number.isFinite(i.price)||i.price<0||!Number.isFinite(i.quantity)||i.quantity<=0))throw new Error('Itens da proposta inválidos.');
+    data.discount=Number(data.discount||0);proposalTotal(data.items,data.discount);
+  }
+  if(type==='contract'&&data.value!==undefined&&(!Number.isFinite(Number(data.value))||Number(data.value)<0))throw new Error('Valor do contrato inválido.');
   if(type==='shift'&&(!data.memberId||!data.date||!data.start||!data.end||data.end<=data.start))throw new Error('Complete os horários e o colaborador da escala.');
   if(type==='call')throw new Error('Chamadas são registradas pelo servidor do provedor de telefonia.');
   return data;

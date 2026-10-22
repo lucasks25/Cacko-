@@ -1,9 +1,10 @@
 import type {Entity} from './types.ts';
 export function validateReferences(type:string,data:Record<string,any>,rows:Entity[],existing?:Entity|null):void{
-  for(const [ref,targetType] of [['leadId','lead'],['dealId','deal'],['conversationId','conversation'],['productId','product'],['owner','member']] as const){
+  for(const [ref,targetType] of [['leadId','lead'],['dealId','deal'],['conversationId','conversation'],['productId','product'],['owner','member'],['memberId','member']] as const){
     if(!data[ref])continue;const target=rows.find(e=>e.id===data[ref]&&e.type===targetType);
     if(!target||(target.deleted&&existing?.data[ref]!==data[ref]))throw new Error('Registro relacionado não encontrado: '+ref);
   }
+  if(type==='shift'&&rows.some(e=>!e.deleted&&e.type==='shift'&&e.id!==existing?.id&&e.data.memberId===data.memberId&&e.data.date===data.date&&data.start<e.data.end&&data.end>e.data.start))throw new Error('Conflito de horário: o colaborador já tem uma escala nesse período.');
   if(type==='deal'){
     const pipeline=rows.find(e=>e.id===data.pipelineId&&e.type==='pipeline');
     if(!pipeline||(pipeline.deleted&&existing?.data.pipelineId!==data.pipelineId)||!pipeline.data.stages.some((s:any)=>s.id===data.stageId))throw new Error('Etapa ou pipeline não encontrado.');

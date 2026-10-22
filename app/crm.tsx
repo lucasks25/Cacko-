@@ -14,6 +14,9 @@ import {ContactOverview,CallsPage,ContactAIPage} from '../components/contact-cen
 import {ConnectedInboxPage} from '../components/connected-inbox';
 import {SquadSidebar} from '../components/squad-shell';
 import {SquadPipelinePage} from '../components/squad-pipeline';
+import {SquadContractsPage} from '../components/squad-contracts';
+import {SquadAdsPage} from '../components/squad-ads';
+import {SquadClientsPage} from '../components/squad-clients';
 import {SquadHomePage,SquadToolsPage,SquadAssistantPage,SquadRecordsPage,SquadShiftsPage} from '../components/squad-workspace';
 import '../components/squad.css';
 import {AutomationsPage,AgentsPage,CampaignsPage} from '../components/automation';
@@ -35,6 +38,7 @@ const navigation:{id:CRMPage;label:string;icon:typeof Users;group:string}[]=[
  {id:'inbox',label:'Caixa de entrada',icon:MessageSquare,group:'Operação'},
  {id:'calls',label:'Ligações',icon:Phone,group:'Operação'},
  {id:'ai-center',label:'Assistente de IA',icon:Bot,group:'Operação'},
+ {id:'contacts-admin',label:'Gestão avançada de clientes',icon:Users,group:'Gestão'},
  {id:'leads',label:'Clientes',icon:Users,group:'Relacionamento'},
  {id:'pipelines',label:'Pipelines',icon:Filter,group:'Relacionamento'},
  {id:'tasks',label:'Agenda e retornos',icon:CalendarDays,group:'Relacionamento'},
@@ -68,7 +72,7 @@ export default function CRM({userName,userEmail}:{userName:string;userEmail:stri
  const active=entities.filter(e=>!e.deleted);const openChats=active.filter(e=>e.type==='conversation'&&e.data.status!=='resolved').length;const overdue=active.filter(e=>e.type==='task'&&!e.data.done&&e.data.dueDate<=new Date().toLocaleDateString('en-CA',{timeZone:'America/Sao_Paulo'}));
  const company=active.find(e=>e.type==='setting'&&e.data.key==='company')?.data;
  const matches=query.trim()?active.filter(e=>['lead','deal','task','automation','product'].includes(e.type)&&JSON.stringify(e.data).toLowerCase().includes(query.toLowerCase())).slice(0,9):[];
- const renderPage=()=>{switch(page){case 'home':return <SquadHomePage/>;case 'tools':return <SquadToolsPage/>;case 'business':return <SettingsPage/>;case 'assistant':return <SquadAssistantPage/>;case 'proposals':return <SquadRecordsPage key="proposal" kind="proposal"/>;case 'finance':return <SquadRecordsPage key="transaction" kind="transaction"/>;case 'contracts':return <SquadRecordsPage key="contract" kind="contract"/>;case 'recruiting':return <SquadRecordsPage key="vacancy" kind="vacancy"/>;case 'marketing':return <SquadRecordsPage key={focusId||'posts'} kind="content"/>;case 'wiki':return <SquadRecordsPage key="article" kind="article"/>;case 'shifts':return <SquadShiftsPage/>;case 'central':return <ContactOverview/>;case 'calls':return <CallsPage/>;case 'ai-center':return <ContactAIPage/>;case 'dashboard':return <DashboardPage/>;case 'pipelines':return <SquadPipelinePage/>;case 'leads':return <LeadsPage/>;case 'tasks':return <TasksPage/>;case 'inbox':return mode==='demo'?<InboxPage/>:<ConnectedInboxPage/>;case 'automations':return <AutomationsPage/>;case 'agents':return <AgentsPage/>;case 'campaigns':return <CampaignsPage/>;case 'products':return <ProductsPage/>;case 'reports':return <ReportsPage/>;case 'connections':return <ConnectionsPage/>;case 'integrations':return <IntegrationsPage/>;case 'settings':return <SettingsPage/>;default:return <HelpPage/>;}};
+ const renderPage=()=>{switch(page){case 'home':return <SquadHomePage/>;case 'tools':return <SquadToolsPage/>;case 'business':return <SettingsPage/>;case 'assistant':return <SquadAssistantPage/>;case 'proposals':return <SquadRecordsPage key="proposal" kind="proposal"/>;case 'finance':return <SquadRecordsPage key="transaction" kind="transaction"/>;case 'contracts':return <SquadContractsPage/>;case 'recruiting':return <SquadRecordsPage key="vacancy" kind="vacancy"/>;case 'marketing':if(focusId==='ads')return <SquadAdsPage/>;return <SquadRecordsPage key={focusId||'posts'} kind="content"/>;case 'wiki':return <SquadRecordsPage key="article" kind="article"/>;case 'shifts':return <SquadShiftsPage/>;case 'central':return <ContactOverview/>;case 'calls':return <CallsPage/>;case 'ai-center':return <ContactAIPage/>;case 'dashboard':return <DashboardPage/>;case 'pipelines':return <SquadPipelinePage/>;case 'leads':return <SquadClientsPage/>;case 'contacts-admin':return <LeadsPage/>;case 'tasks':return <TasksPage/>;case 'inbox':return mode==='demo'?<InboxPage/>:<ConnectedInboxPage/>;case 'automations':return <AutomationsPage/>;case 'agents':return <AgentsPage/>;case 'campaigns':return <CampaignsPage/>;case 'products':return <ProductsPage/>;case 'reports':return <ReportsPage/>;case 'connections':return <ConnectionsPage/>;case 'integrations':return <IntegrationsPage/>;case 'settings':return <SettingsPage/>;default:return <HelpPage/>;}};
  return <CRMContext.Provider value={context}><div className={`app-shell sq-app ${sidebar?'':'sq-collapsed'}`}>
   <SquadSidebar collapsed={!sidebar} onCollapse={()=>setSidebar(!sidebar)} onSearch={()=>setSearchOpen(true)}/>
   <div className="main-frame"><main key={mode+reloadKey} className={`page-content page-${page}`}>{renderPage()}</main></div>

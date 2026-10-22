@@ -47,10 +47,12 @@ export function makeDemo():Entity[]{
    {name:'Locação do escritório',amount:1800,direction:'out',status:'paid',category:'Despesas'},
    {name:'Plano Growth',amount:1200,direction:'in',status:'pending',category:'Clientes'}
   ].forEach((d,i)=>add('transaction','transaction-'+i,{...d,date:day(-i)}));
-  ['Contrato de prestação de serviços','Contrato de locação comercial'].forEach((name,i)=>add('contract','contract-'+i,{name,status:'imported',counterparty:companies[i],value:values[i],expires:day(30+i*30),text:'Contrato de demonstração. Substitua pelo conteúdo real do seu contrato.'}));
-  ['Analista de Atendimento','Executivo de Vendas','Analista de Marketing Digital','Coordenador(a) de Operações'].forEach((name,i)=>add('vacancy','vacancy-'+i,{name,location:['São Paulo','Remoto'][i%2],regime:i%2?'PJ':'CLT',status:'open',candidates:[],description:'Vaga de demonstração. Edite os requisitos para a sua empresa.'}));
+  ['Contrato de prestação de serviços','Contrato de locação comercial'].forEach((name,i)=>add('contract','contract-'+i,{name,status:'imported',counterparty:companies[i],value:values[i],folder:i?'Financeiro':'Comercial',noticeDays:15,expires:day(30+i*30),text:'Contrato de demonstração. Substitua pelo conteúdo real do seu contrato.'}));
+  ['Analista de Atendimento','Executivo de Vendas','Analista de Marketing Digital','Coordenador(a) de Operações','Barista','Analista de Dados','Designer de Produto','Gerente de Loja'].forEach((name,i)=>add('vacancy','vacancy-'+i,{name,location:['São Paulo','Remoto'][i%2],regime:i%2?'PJ':'CLT',status:'open',candidates:[{name:names[i],email:'candidato'+i+'@exemplo.com',stage:'Novo'}],description:'Vaga de demonstração. Edite os requisitos para a sua empresa.'}));
   for(let i=0;i<7;i++)owners.forEach((_,j)=>{if(i<5||j===1)add('shift','shift-'+i+'-'+j,{memberId:'member-'+j,date:day(i),start:'09:00',end:'18:00',team:j?'Atendimento':'Comercial'});});
   add('article','article-0',{name:'Como funciona nosso atendimento',text:'Atendemos de segunda a sexta, das 9h às 18h. Dúvidas comerciais devem ser encaminhadas ao time de vendas.',approved:true});
   add('content','content-0',{name:'Conheça nossa consultoria',kind:'posts',platform:'Instagram',status:'draft',text:'Organize seu processo comercial e aproxime sua empresa de cada cliente.',date:day(2)});
+  add('content','content-ad-0',{name:'Conheça o plano de atendimento',kind:'ads',platform:'Google Ads',status:'draft',adStatus:'review',budget:1500,text:'Campanha fictícia para demonstrar a interface. Nenhum anúncio real foi publicado.',metrics:{period:day(0).slice(0,7),spend:240,returns:960,results:24}});
+  add('content','content-ad-1',{name:'Consultoria para pequenos negócios',kind:'ads',platform:'Google Ads',status:'draft',adStatus:'review',budget:1800,text:'Rascunho fictício. Revise o público e os objetivos antes de conectar um provedor.',metrics:{period:day(0).slice(0,7),spend:0,returns:0,results:0}});
   return rows;
 }

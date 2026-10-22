@@ -55,7 +55,7 @@ export function LeadsPage(){
   </div>;
 }
 
-function LeadForm({lead,onClose,onSaved}:{lead?:Entity;onClose:()=>void;onSaved:(id:string)=>void}){
+export function LeadForm({lead,onClose,onSaved}:{lead?:Entity;onClose:()=>void;onSaved:(id:string)=>void}){
   const {entities,save,notify}=useCRM();const [form,setForm]=useState<Record<string,any>>(()=>({name:'',email:'',phone:'',company:'',source:'',owner:'',notes:'',custom:{},...lead?.data,tags:(lead?.data.tags||[]).map((value:string)=>tagLabel(entities,value))}));const [saving,setSaving]=useState(false);const [error,setError]=useState('');
   const members=entities.filter(e=>e.type==='member'&&!e.deleted);const tags=entities.filter(e=>e.type==='tag'&&!e.deleted);const fields=entities.filter(e=>e.type==='field'&&!e.deleted&&(!e.data.target||e.data.target==='lead'));
   const tagValues=Array.from(new Set([...tags.map(e=>String(e.data.name)),...(form.tags||[])])) as string[];

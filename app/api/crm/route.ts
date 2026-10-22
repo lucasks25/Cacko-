@@ -2,6 +2,7 @@ import {env} from 'cloudflare:workers';
 import {getChatGPTUser} from '../../chatgpt-auth';
 import {prepareWrite,evaluateFlow,validateReferences,resolveOwner} from '../../../lib/domain';
 import type {Entity,EntityType} from '../../../lib/types';
+import {recordMutation} from '../../../lib/record-write';
 export const dynamic='force-dynamic';
 const reply=(value:any,status=200)=>Response.json(value,{status,headers:{'Cache-Control':'no-store'}});
 const decode=(r:any):Entity=>({id:r.id,type:r.type,data:JSON.parse(r.data),revision:r.revision,updatedAt:r.updated_at,deleted:!!r.deleted});
@@ -18,9 +19,8 @@ export async function POST(request:Request){
     if(action!=='save'&&!existing)return reply({error:'Registro não encontrado.'},404);
     if(action==='save'){if(result.data.owner)result.data.owner=resolveOwner(result.data.owner,rows);validateReferences(input.type,result.data,rows,existing);}
     const updatedAt=new Date().toISOString();const deleted=action==='archive'?true:action==='restore'?false:existing?.deleted??false;
-    let mutation;
-    if(existing)mutation=await env.DB!.prepare('UPDATE crm_records SET data=?,revision=?,updated_at=?,deleted=? WHERE owner=? AND id=? AND revision=?').bind(JSON.stringify(result.data),result.revision,updatedAt,deleted?1:0,user.userId,id,existing.revision).run();
-    else mutation=await env.DB!.prepare('INSERT OR IGNORE INTO crm_records(owner,id,type,data,revision,updated_at,deleted) VALUES(?,?,?,?,?,?,?)').bind(user.userId,id,input.type,JSON.stringify(result.data),result.revision,updatedAt,0).run();
+    const write=recordMutation({owner:user.userId,id,type:input.type,data:result.data,revision:result.revision,updatedAt,deleted},existing?.revision??null);
+    const mutation=await env.DB!.prepare(write.sql).bind(...write.parameters).run();
     if(mutation.meta.changes!==1)return reply({error:'Conflito de edição. Atualize e tente novamente.'},409);
     const entity:Entity={id,type:input.type,data:result.data,revision:result.revision,updatedAt,deleted};
     let flowWarning:string|undefined;

@@ -46,6 +46,12 @@ class MessagingTests(unittest.TestCase):
    return httpx.Response(200,json={'payload':{'contact':{'id':8,'name':'Ana','phone_number':'+5511999991234','access_token':'secret'}}})
   result=self.run_provider(respond,lambda cw:cw.create_contact({'name':'Ana','phone_number':'+5511999991234'}))
   self.assertEqual(result['id'],'8');self.assertNotIn('secret',str(result))
+ def test_loading_a_linked_conversation_keeps_account_scope_and_sanitizes_metadata(self):
+  def respond(request):
+   self.assertEqual(request.url.path,'/api/v1/accounts/7/conversations/55')
+   return httpx.Response(200,json={'id':55,'status':'open','meta':{'sender':{'name':'Ana'},'access_token':'secret'}})
+  result=self.run_provider(respond,lambda cw:cw.conversation(55))
+  self.assertEqual(result['name'],'Ana');self.assertNotIn('secret',str(result))
  def test_new_conversation_validates_channel_and_contact_and_does_not_send_a_message(self):
   requests=[]
   def respond(request):

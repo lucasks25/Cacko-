@@ -1,0 +1,20 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {DatabaseSync} from 'node:sqlite';
+import {readFileSync} from 'node:fs';
+import {recordMutation} from '../lib/record-write.ts';
+test('atomic shift writes reject overlap even when both callers validated an empty snapshot',()=>{
+ const db=new DatabaseSync(':memory:');db.exec(readFileSync(new URL('../drizzle/0000_glorious_pretty_boy.sql',import.meta.url),'utf8'));
+ const a={owner:'alice',id:'a',type:'shift',data:{memberId:'m1',date:'2026-10-22',start:'09:00',end:'12:00'},revision:1,updatedAt:'now',deleted:false};
+ const b={...a,id:'b',data:{...a.data,start:'10:00',end:'13:00'}};
+ const first=recordMutation(a,null),second=recordMutation(b,null);
+ assert.equal(db.prepare(first.sql).run(...first.parameters).changes,1);
+ assert.equal(db.prepare(second.sql).run(...second.parameters).changes,0);
+ const touching=recordMutation({...b,data:{...b.data,start:'12:00',end:'14:00'}},null);
+ assert.equal(db.prepare(touching.sql).run(...touching.parameters).changes,1);
+ const move=recordMutation({...b,revision:2,data:{...b.data,start:'11:00',end:'14:00'}},1);
+ assert.equal(db.prepare(move.sql).run(...move.parameters).changes,0);
+ const otherTenant=recordMutation({...a,owner:'bob'},null);assert.equal(db.prepare(otherTenant.sql).run(...otherTenant.parameters).changes,1);
+ const archive=recordMutation({...a,deleted:true,revision:2},1);assert.equal(db.prepare(archive.sql).run(...archive.parameters).changes,1);
+ db.close();
+});

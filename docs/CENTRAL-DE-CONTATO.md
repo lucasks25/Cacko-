@@ -106,3 +106,16 @@ WhatsApp, SMS, Twilio, e-mail, API e WebWidget têm suporte de início de conver
 **Carregar mais conversas** pagina a lista conforme o filtro de status. A busca da lista filtra as conversas já carregadas. **Carregar mensagens anteriores** recupera páginas antigas e mantém o histórico durante atualizações automáticas. O modal de novo atendimento também permite buscar e paginar contatos.
 
 O item **Ativar atendimento** no menu abre o checklist com status de conexão e links oficiais. “Configurado” indica configuração presente, não teste de operação concluído. Como o usuário ainda não possui contas de provedores, a publicação continua sem telefonia/mensagens reais.
+
+## Ferramentas dos agentes
+
+Abra um agente e selecione **Executar ferramenta** ou um cartão da área **Meu trabalho no seu negócio**. O endpoint `/v1/tools` usa o motor de texto configurado e exige o mesmo token/tenant do restante da central. Não há chave de IA no navegador.
+
+- Waz: monta proposta usando os produtos escolhidos; preços vêm do catálogo, não do modelo.
+- Maky: cria rascunho de post, artigo, anúncio ou análise do material fornecido.
+- Fin: extrai um lançamento pendente; não marca valores como pagos/recebidos.
+- Opy: prepara um turno; conflitos são rejeitados na escrita atômica do CRM.
+- Juri: extrai dados do texto fornecido ou prepara e-mail de renovação; não assina ou envia.
+- Pipo: organiza artigo não aprovado ou responde com as fontes aprovadas selecionadas por relevância.
+
+O usuário revisa o resultado e clica em **Aprovar e salvar**. Um ID estável impede duplicação caso a resposta do salvamento se perca. Os textos de renovação/consulta podem ser salvos no histórico. PDF, publicação de campanhas, candidaturas públicas e chamadas automáticas de ferramentas pelo chat livre permanecem fora deste incremento.

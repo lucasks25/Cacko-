@@ -28,6 +28,8 @@ def messaging_router(settings,tenant):
   return {'messages':rows,'oldestId':str(min(int(m['id']) for m in rows)) if rows else None,'hasMore':len(rows)==(100 if after is not None else 20)}
  @router.get('/inboxes')
  async def inboxes(t=Depends(tenant)):return {'inboxes':await provider(t).inboxes()}
+ @router.get('/conversations/{conversation_id}')
+ async def conversation(conversation_id:int,t=Depends(tenant)):return {'conversation':await provider(t).conversation(conversation_id)}
  @router.get('/contacts')
  async def contacts(q:str=Query('',max_length=100),page:int=Query(1,ge=1,le=10000),t=Depends(tenant)):
   return await provider(t).contacts(q.strip(),page)

@@ -15,6 +15,7 @@ test('filtered page refresh removes conversations that no longer belong to the f
 test('messaging query validates cursors, pages, filters and escaped search',()=>{
  assert.equal(messagingQuery('conversations',{page:'3',status:'pending'}),'/conversations?page=3&status=pending');
  assert.equal(messagingQuery('messages:9',{before:'101'}),'/conversations/9/messages?before=101');
+ assert.equal(messagingQuery('conversation:9'),'/conversations/9');
  assert.equal(messagingQuery('messages:9',{after:'101'}),'/conversations/9/messages?after=101');
  assert.throws(()=>messagingQuery('messages:9',{before:'101',after:'90'}));
  assert.equal(messagingQuery('contacts',{q:'Ana & Filhos',page:'2'}),'/contacts?q=Ana+%26+Filhos&page=2');
@@ -31,6 +32,9 @@ test('a delayed poll cannot replace the result of a newer refresh',()=>{
  const gate=createRequestGate();const oldPoll=gate.begin();const newRefresh=gate.begin();
  let status='pending';if(newRefresh())status='open';if(oldPoll())status='pending';
  assert.equal(status,'open');
+});
+test('manual selection cancels an outstanding deep link request',()=>{
+ const gate=createRequestGate();const pending=gate.begin();gate.invalidate();assert.equal(pending(),false);
 });
 test('polling refreshes delivery status as well as new messages',async()=>{
  const calls:Record<string,string>[]=[];

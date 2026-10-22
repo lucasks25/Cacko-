@@ -26,6 +26,7 @@ class Chatwoot:
   async with httpx.AsyncClient(timeout=25,follow_redirects=False) as client:return await send(client)
  async def conversations(self):
   return (await self.conversation_page())['conversations']
+ async def conversation(self,conversation_id):return clean_conversation(await self.request('GET',f'/conversations/{int(conversation_id)}'))
  async def conversation_page(self,page=1,status='all'):
   data=await self.request('GET','/conversations?'+urlencode({'page':page,'status':status}));payload=data.get('data',{}).get('payload',data.get('payload',[]))
   return {'conversations':[clean_conversation(c) for c in payload],'page':page,'hasMore':bool(payload)}

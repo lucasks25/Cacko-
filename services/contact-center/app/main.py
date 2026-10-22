@@ -9,6 +9,7 @@ from .store import Store,now,TERMINAL
 from .policy import dial_number,is_auto_reply_eligible
 from .providers import Chatwoot,ProviderError,generate_text
 from .messaging import messaging_router
+from .agent_tools import tools_router
 
 settings=Settings();store=Store(os.environ.get('DATABASE_PATH','data/contact-center.sqlite'))
 log=logging.getLogger('contact-center')
@@ -70,6 +71,7 @@ async def status(t=Depends(tenant)):
   except ProviderError:pass
  state['configured']=True;return state
 app.include_router(messaging_router(settings,tenant))
+app.include_router(tools_router(settings,tenant,store))
 @app.post('/v1/conversations/{conversation_id}/messages')
 async def send_message(conversation_id:int,data:Message,t=Depends(tenant)):
  if not data.text.strip():raise HTTPException(400,'Informe a mensagem.')

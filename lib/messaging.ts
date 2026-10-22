@@ -1,7 +1,7 @@
 import {normalizeDialNumber} from './contact-center.ts';
 
 type RecordWithId={id:string;[key:string]:any};
-export function createRequestGate(){let sequence=0;return {begin(){const request=++sequence;return ()=>request===sequence;}};}
+export function createRequestGate(){let sequence=0;return {invalidate(){sequence++;},begin(){const request=++sequence;return ()=>request===sequence;}};}
 export async function loadMessageWindow(fetcher:(params:Record<string,string>)=>Promise<any>,known:RecordWithId[],initialized:boolean):Promise<{updates:RecordWithId[];history?:{oldestId:string|null;hasMore:boolean}}>{
  if(!initialized){const r=await fetcher({});return {updates:r.messages,history:{oldestId:r.oldestId,hasMore:r.hasMore}};}
  const newest=known[known.length-1]?.id;
@@ -22,6 +22,7 @@ const positive=(value:unknown,max=2147483647)=>{const s=String(value);if(!/^[1-9
 export function messagingQuery(op:string,params:Record<string,string>={}):string{
  const query=new URLSearchParams();let path='';
  if(op==='inboxes')return '/inboxes';
+ if(op.startsWith('conversation:'))return '/conversations/'+positive(op.slice(13));
  if(op==='conversations'){
   path='/conversations';query.set('page',String(positive(params.page||'1',10000)));
   const status=params.status||'all';if(!['all','pending','open','resolved'].includes(status))throw new Error('Filtro inválido.');query.set('status',status);
