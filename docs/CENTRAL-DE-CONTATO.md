@@ -109,7 +109,7 @@ O item **Ativar atendimento** no menu abre o checklist com status de conexão e 
 
 ## Ferramentas dos agentes
 
-Abra um agente e selecione **Executar ferramenta** ou um cartão da área **Meu trabalho no seu negócio**. O endpoint `/v1/tools` usa o motor de texto configurado e exige o mesmo token/tenant do restante da central. Não há chave de IA no navegador.
+Abra um agente e selecione **Nova tarefa**, uma opção da conversa ou um cartão da área **Meu trabalho no seu negócio**. O endpoint `/v1/tools` usa o motor de texto configurado e exige o mesmo token/tenant do restante da central. Não há chave de IA no navegador.
 
 - Waz: monta proposta usando os produtos escolhidos; preços vêm do catálogo, não do modelo.
 - Maky: cria rascunho de post, artigo, anúncio ou análise do material fornecido.
@@ -119,3 +119,12 @@ Abra um agente e selecione **Executar ferramenta** ou um cartão da área **Meu 
 - Pipo: organiza artigo não aprovado ou responde com as fontes aprovadas selecionadas por relevância.
 
 O usuário revisa o resultado e clica em **Aprovar e salvar**. Um ID estável impede duplicação caso a resposta do salvamento se perca. Os textos de renovação/consulta podem ser salvos no histórico. PDF, publicação de campanhas, candidaturas públicas e chamadas automáticas de ferramentas pelo chat livre permanecem fora deste incremento.
+
+
+## Tarefas na conversa — 23/10/2026
+
+As opções de tarefa abrem um painel dentro do agente. Revisar e salvar não redirecionam automaticamente. O resultado fica no histórico, e **Ver no módulo** é uma ação explícita. **Abrir módulos** reúne os atalhos de navegação separados das tarefas. O chat livre continua sendo uma conversa de texto; digitar um pedido ainda não dispara ferramentas automaticamente.
+
+O histórico inclui os campos estruturados revisados e um resumo do texto. Conteúdos extensos são limitados e identificados como resumo. Se o registro for salvo e a gravação do histórico falhar, a interface informa a falha parcial e não oferece salvar o registro novamente. A persistência das duas entradas não é uma transação única.
+
+A referência pública do Squad anuncia agentes que executam tarefas, mas não revela o comportamento autenticado de cada clique. Este ajuste corrige o fluxo da implementação própria; não comprova reprodução integral do produto.

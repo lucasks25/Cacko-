@@ -1,23 +1,25 @@
 'use client';
 import {useState,useRef,useEffect} from 'react';
-import {ArrowRight,ArrowUpRight,Check,Copy,Plus,Sparkles,Trash2} from 'lucide-react';
+import {ArrowRight,ArrowUpRight,Check,Copy,Plus,Sparkles,Trash2,X} from 'lucide-react';
 import {useCRM} from './context';
 import {Button,Modal,Field,ErrorText,Badge} from './ui';
 import {AGENT_TOOLS,buildToolContext,prepareToolRecord} from '../lib/agent-tools';
 import {contactRequest} from '../lib/contact-center';
+import {saveAgentTaskResult} from '../lib/agent-task-save';
 import {proposalTotal} from '../lib/workspace';
 import {currency,type CRMPage} from '../lib/types';
 import './agent-actions.css';
 
-export function AgentActions({agent,initialTool,asCard=false}:{agent:string;initialTool?:string;asCard?:boolean}){
+export function AgentActions({agent,initialTool,asCard=false,onStart}:{agent:string;initialTool?:string;asCard?:boolean;onStart?:(tool:string)=>void}){
  const [open,setOpen]=useState(false);
  const task=AGENT_TOOLS.find(t=>t.agent===agent&&t.id===initialTool);
- return <>{asCard&&task?<button className="aa-tool-launch" onClick={()=>setOpen(true)}><Sparkles size={18}/><strong>{task.name}</strong><p>{task.description}</p><span>Preparar tarefa<ArrowUpRight size={13}/></span></button>:<Button onClick={()=>setOpen(true)}><Sparkles size={15}/>Executar ferramenta</Button>}{open&&<ActionDialog agent={agent} initialTool={initialTool} onClose={()=>setOpen(false)}/>}</>;
+ const start=()=>onStart?onStart(initialTool||AGENT_TOOLS.find(t=>t.agent===agent)!.id):setOpen(true);
+ return <>{asCard&&task?<button className="aa-tool-launch" onClick={start}><Sparkles size={18}/><strong>{task.name}</strong><p>{task.description}</p><span>Começar tarefa<ArrowRight size={13}/></span></button>:<Button onClick={start}><Sparkles size={15}/>Nova tarefa</Button>}{open&&<AgentTask agent={agent} initialTool={initialTool} onClose={()=>setOpen(false)}/>}</>;
 }
-function ActionDialog({agent,onClose,initialTool}:{agent:string;onClose:()=>void;initialTool?:string}){
+export function AgentTask({agent,onClose,initialTool,inline=false}:{agent:string;onClose:()=>void;initialTool?:string;inline?:boolean}){
  const {entities,mode,save,navigate,notify}=useCRM();
  const options=AGENT_TOOLS.filter(t=>t.agent===agent);
- const [tool,setTool]=useState(options.some(t=>t.id===initialTool)?initialTool!:options[0].id),[prompt,setPrompt]=useState(''),[selection,setSelection]=useState<any>({productIds:[],leadId:'',kind:'posts',sourceText:'',contractId:''}),[result,setResult]=useState<any>(null),[busy,setBusy]=useState(false),[error,setError]=useState('');
+ const [tool,setTool]=useState(options.some(t=>t.id===initialTool)?initialTool!:options[0].id),[prompt,setPrompt]=useState(''),[selection,setSelection]=useState<any>({productIds:[],leadId:'',kind:'posts',sourceText:'',contractId:''}),[result,setResult]=useState<any>(null),[busy,setBusy]=useState(false),[error,setError]=useState(''),[saved,setSaved]=useState(false);
  const requestBusy=useRef(false),mounted=useRef(true),draftId=useRef('');
  useEffect(()=>{mounted.current=true;return()=>{mounted.current=false;};},[]);
  const descriptor=options.find(t=>t.id===tool)!;const active=entities.filter(e=>!e.deleted);
@@ -37,19 +39,20 @@ function ActionDialog({agent,onClose,initialTool}:{agent:string;onClose:()=>void
   }catch(e){if(mounted.current)setError(e instanceof Error?e.message:'Não foi possível preparar o rascunho.');}finally{requestBusy.current=false;if(mounted.current)setBusy(false);}
  };
  const apply=async()=>{
-  if(requestBusy.current||!result)return;requestBusy.current=true;setBusy(true);setError('');
+  if(requestBusy.current||!result||saved)return;requestBusy.current=true;setBusy(true);setError('');
   try{
-   if(result.type==='text')await save('chatTurn',{agent,role:'assistant',text:result.text,tool,createdAt:new Date().toISOString()},draftId.current,0);
-   else{const prepared=prepareToolRecord(tool,result.data,entities);await save(prepared.type,prepared.data,draftId.current,0);}
+   const receipt=await saveAgentTaskResult({agent,tool,result,draftId:draftId.current,entities,save});
+   if(!receipt.historySaved)setError('O registro foi salvo, mas não foi possível anexá-lo à conversa. Consulte o módulo; não é necessário salvar novamente.');
    notify(result.type==='text'?'Rascunho salvo no histórico do agente.':'Registro salvo após sua revisão.');
-   onClose();if(result.type!=='text')navigate(descriptor.page as CRMPage,tool==='content'?result.data.kind:undefined);
+   setSaved(true);
   }catch(e){if(mounted.current)setError((e as Error).message);}finally{requestBusy.current=false;if(mounted.current)setBusy(false);}
  };
  const d=result?.data||{};
- return <Modal title={result?'Revise o resultado':'Executar ferramenta'} wide onClose={()=>{if(!requestBusy.current)onClose();}}><div className="aa-dialog">
-  {!result?<><div className="aa-intro"><span><Sparkles size={23}/></span><div><h3>Do pedido ao registro</h3><p>O agente prepara. Você revisa e salva no módulo correspondente.</p></div></div>
+ const content=<div className="aa-dialog">
+  {saved?<div className="aa-saved" role="status"><span><Check size={22}/></span><h3>{result.type==='text'?'Resultado salvo na conversa':'Registro salvo'}</h3><p>{result.type==='text'?result.text:result.data.name||descriptor.name}</p><small>Você pode continuar com o agente ou abrir o registro no módulo.</small><div><Button onClick={onClose}>Continuar com o agente</Button>{result.type!=='text'&&<Button variant="primary" onClick={()=>navigate(descriptor.page as CRMPage,tool==='content'?result.data.kind:undefined)}>Ver no módulo<ArrowUpRight size={14}/></Button>}</div></div>:<>
+  {!result?<><div className="aa-intro"><span><Sparkles size={23}/></span><div><h3>Vamos preparar juntos</h3><p>Conte o que precisa. Você confere o resultado antes de salvar.</p></div></div>
    {mode==='demo'&&<div className="aa-pending"><Badge tone="orange">Demonstração</Badge><p>Para gerar resultados, use seus dados e conecte o motor de IA.</p><Button onClick={()=>{onClose();navigate('ai-center','setup');}}>Ativar minha IA<ArrowRight size={14}/></Button></div>}
-   <fieldset disabled={busy}><Field label="Ferramenta"><select value={tool} onChange={e=>{setTool(e.target.value);setError('');setPrompt('');}}>{options.map(t=><option value={t.id} key={t.id}>{t.name}</option>)}</select></Field><p className="aa-description">{descriptor.description}</p>
+   <fieldset disabled={busy}><Field label="Tarefa"><select value={tool} onChange={e=>{setTool(e.target.value);setError('');setPrompt('');}}>{options.map(t=><option value={t.id} key={t.id}>{t.name}</option>)}</select></Field><p className="aa-description">{descriptor.description}</p>
     {tool==='proposal'&&<><Field label="Cliente"><select value={selection.leadId} onChange={e=>choose('leadId',e.target.value)}><option value="">Sem cliente vinculado</option>{leads.map(l=><option key={l.id} value={l.id}>{l.data.name}</option>)}</select></Field><Field label="Produtos do catálogo"><div className="aa-product-list">{products.length?products.map(p=><label key={p.id}><input type="checkbox" checked={selection.productIds.includes(p.id)} onChange={e=>choose('productIds',e.target.checked?[...selection.productIds,p.id]:selection.productIds.filter((id:string)=>id!==p.id))}/><span>{p.data.name}</span><strong>{currency(Number(p.data.price))}</strong></label>):<p>Cadastre os produtos e preços antes de gerar a proposta.</p>}</div></Field>{!products.length&&<Button onClick={()=>{onClose();navigate('products');}}>Abrir catálogo<ArrowUpRight size={14}/></Button>}</>}
     {tool==='content'&&<Field label="Formato"><select value={selection.kind} onChange={e=>choose('kind',e.target.value)}><option value="posts">Post</option><option value="blog">Artigo / blog</option><option value="ads">Rascunho de anúncio</option><option value="analysis">Análise de referências fornecidas</option></select></Field>}
     {tool==='contract'&&<Field label="Texto do contrato" required><textarea rows={9} maxLength={20000} value={selection.sourceText} onChange={e=>choose('sourceText',e.target.value)} placeholder="Cole o texto para extrair os dados e conferir os prazos."/></Field>}
@@ -68,6 +71,10 @@ function ActionDialog({agent,onClose,initialTool}:{agent:string;onClose:()=>void
     {['content','article'].includes(tool)&&<><Field label="Conteúdo"><textarea rows={13} value={d.text||''} onChange={e=>change('text',e.target.value)}/></Field><Badge>{tool==='article'?'Artigo ainda não aprovado':'Rascunho · sem publicação externa'}</Badge></>}
    </>}</fieldset>
   </>}
-  <ErrorText error={error}/><div className="aa-actions"><Button disabled={busy} onClick={onClose}>Cancelar</Button>{result?<><Button disabled={busy} onClick={()=>setResult(null)}>Refazer</Button><Button variant="primary" loading={busy} onClick={()=>void apply()}><Check size={15}/>{result.type==='text'?'Salvar no histórico':'Aprovar e salvar'}</Button></>:<Button variant="primary" disabled={mode==='demo'} loading={busy} onClick={()=>void generate()}><Sparkles size={15}/>Gerar rascunho</Button>}</div>
- </div></Modal>;
+  <div className="aa-actions"><Button disabled={busy} onClick={onClose}>Cancelar</Button>{result?<><Button disabled={busy} onClick={()=>setResult(null)}>Refazer</Button><Button variant="primary" loading={busy} onClick={()=>void apply()}><Check size={15}/>{result.type==='text'?'Salvar no histórico':'Aprovar e salvar'}</Button></>:<Button variant="primary" disabled={mode==='demo'} loading={busy} onClick={()=>void generate()}><Sparkles size={15}/>Gerar rascunho</Button>}</div>
+ </>}
+ <ErrorText error={error}/>
+ </div>;
+ const close=()=>{if(!requestBusy.current)onClose();};
+ return inline?<section className="aa-inline-task" aria-label="Tarefa do agente"><header><span><Sparkles size={17}/><strong>{saved?'Tarefa concluída':result?'Revise o resultado':descriptor.name}</strong></span><button onClick={close} disabled={busy} aria-label="Fechar tarefa"><X size={17}/></button></header>{content}</section>:<Modal title={saved?'Tarefa concluída':result?'Revise o resultado':'Nova tarefa'} wide onClose={close}>{content}</Modal>;
 }
