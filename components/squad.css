@@ -33,3 +33,4 @@ html:has(.sq-app){scrollbar-width:thin;scrollbar-color:#d0d2cb transparent}
 html:has(.sq-app)::-webkit-scrollbar{width:5px;height:5px}
 html:has(.sq-app)::-webkit-scrollbar-thumb{background:#d0d2cb;border-radius:8px}
 @supports selector(::-webkit-scrollbar){html:has(.sq-app),.sq-app *{scrollbar-width:auto;scrollbar-color:auto}}
+.sq-brief-count{font-size:10px;font-weight:500;background:#fbe9e5;color:#bd7269;border-radius:10px;padding:2px 7px;margin-left:8px;vertical-align:middle}.sq-brief-dot{height:7px;width:7px;border-radius:50%;flex-shrink:0;background:#e2b36b}.sq-brief-dot.red{background:#d9776a}.sq-brief-empty{display:flex;align-items:center;gap:10px;padding:18px 20px;font-size:12px;color:#7a9467}

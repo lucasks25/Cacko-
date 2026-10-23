@@ -6,6 +6,8 @@ import {Avatar,Badge,Button,Empty,ErrorText,PageHeader,Modal,Field} from './ui';
 import {contactRequest} from '../lib/contact-center';
 import {mergeConversations,mergeConversationPage,mergeMessages,validateNewContact,createRequestGate,loadMessageWindow} from '../lib/messaging';
 import {ConnectionNotice} from './contact-center';
+import {useLeadIntake} from './lead-intake';
+import {findLead} from '../lib/lead-intake';
 import './engagement.css';
 import './connected-inbox.css';
 
@@ -14,6 +16,9 @@ const errorText=(e:unknown)=>e instanceof Error?e.message:'Não foi possível co
 export function ConnectedInboxPage(){
  const {notify,navigate,save,entities,focusId}=useCRM();
  const [conversations,setConversations]=useState<Row[]>([]),[current,setCurrent]=useState<Row|null>(null),[messages,setMessages]=useState<Row[]>([]);
+ const intake=useLeadIntake(),intakeSeen=useRef(new Set<string>()),intakeBusy=useRef(false);
+ // Entrada única: conversa de contato que ainda não está no CRM vira lead, negócio, tarefa e histórico automaticamente.
+ useEffect(()=>{if(intakeBusy.current)return;const fresh=conversations.filter(c=>c.status!=='resolved'&&!intakeSeen.current.has(String(c.id))&&!findLead(entities,{channel:c.channel,name:c.name,phone:c.phone,conversationId:String(c.id),receivedAt:''})).slice(0,20);if(!fresh.length)return;intakeBusy.current=true;void (async()=>{let created=0;for(const c of fresh){intakeSeen.current.add(String(c.id));try{await intake({channel:c.channel,name:c.name,phone:c.phone,text:c.lastMessage,conversationId:String(c.id),receivedAt:new Date().toISOString()});created++;}catch{notify('Um contato novo não pôde ser organizado automaticamente. Vincule o cliente manualmente na conversa.','error');break;}}intakeBusy.current=false;if(created)notify(`${created} novo${created>1?'s':''} contato${created>1?'s':''} organizado${created>1?'s':''} no CRM automaticamente.`,'info');})();},[conversations,entities]);
  const [search,setSearch]=useState(''),[filter,setFilter]=useState('all'),[text,setText]=useState(''),[note,setNote]=useState(false),[error,setError]=useState(''),[busy,setBusy]=useState(false),[suggestion,setSuggestion]=useState(''),[ready,setReady]=useState(false),[create,setCreate]=useState(false);
  const [page,setPage]=useState(1),[more,setMore]=useState(false),[paging,setPaging]=useState(false),[older,setOlder]=useState<string|null>(null),[hasOlder,setHasOlder]=useState(false),[loadingOlder,setLoadingOlder]=useState(false);
  const currentRef=useRef(current);currentRef.current=current;

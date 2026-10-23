@@ -6,7 +6,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel,Field,ConfigDict
 from .config import Settings,ConfigurationError
 from .store import Store,now,TERMINAL
-from .policy import dial_number,is_auto_reply_eligible
+from .policy import dial_number,is_auto_reply_eligible,crm_intake_message
 from .providers import Chatwoot,ProviderError,generate_text
 from .messaging import messaging_router
 from .agent_tools import tools_router
@@ -236,6 +236,15 @@ async def auto_reply_locked(t,payload):
  except Exception:
   # No automatic resend after an uncertain network response: prevent duplicate external messages.
   store.finish_event(t,event_id,'failed');log.warning('Falha na resposta automática; evento preservado para auditoria.')
+async def forward_to_crm(owner,message,client=None):
+ # Entrada única 24h: o CRM cria/atualiza o lead, o negócio e a tarefa, e ignora mensagens repetidas pelo messageId.
+ import httpx
+ async def send(c):
+  try:r=await c.post(settings.values['CRM_INTAKE_URL'],headers={'Authorization':'Bearer '+settings.values['CRM_INTAKE_SECRET']},json={'owner':owner,'message':message});r.raise_for_status()
+  except httpx.HTTPError as e:log.warning('Lead não enviado ao CRM: %s',type(e).__name__)
+ if client:return await send(client)
+ async with httpx.AsyncClient(timeout=15) as c:await send(c)
+
 @app.post('/webhooks/chatwoot/{tenant_id}')
 async def chatwoot_hook(tenant_id:str,request:Request,background:BackgroundTasks):
  cfg=settings.tenant(tenant_id);expected=cfg.get('webhook_secret','')
@@ -245,6 +254,8 @@ async def chatwoot_hook(tenant_id:str,request:Request,background:BackgroundTasks
  data=json.loads(raw)
  if str(data.get('account',{}).get('id'))!=str(cfg.get('chatwoot_account_id')):raise HTTPException(403,'Conta não corresponde ao tenant.')
  if is_auto_reply_eligible(data,store.agent(tenant_id)):background.add_task(auto_reply,tenant_id,data)
+ message=crm_intake_message(data)
+ if message and cfg.get('crm_owner') and settings.values.get('CRM_INTAKE_URL') and len(settings.values.get('CRM_INTAKE_SECRET',''))>=32:background.add_task(forward_to_crm,cfg['crm_owner'],message)
  return {'accepted':True}
 
 @app.post('/webhooks/livekit')

@@ -21,7 +21,7 @@ A demonstração abre com dados fictícios. Em **Usar meus dados**, os registros
 - Registros financeiros de entradas/saídas; não movimentam dinheiro.
 - Contratos com texto, contraparte e vencimento; não fazem assinatura digital nem análise jurídica automática.
 - Escalas por colaborador, vagas/candidatos manuais, artigos da wiki e rascunhos de conteúdo.
-- Navegação por agentes e ferramentas; chat dos agentes usa um motor de IA configurado no servidor. Não executa automaticamente as ferramentas.
+- Tarefas guiadas dentro dos agentes, com revisão, salvamento e resultado no histórico; o chat livre reconhece pedidos de tarefa e abre a tarefa preenchida para revisão; as demais mensagens dependem de IA configurada.
 - Atendimento Chatwoot por API: conversas existentes, mensagens de texto, notas, status, sugestão e resumo com IA.
 - LiveKit: teste de áudio no navegador, chamadas individuais por SIP, transcrição do agente, entrada de humano e encerramento.
 
@@ -31,7 +31,7 @@ A demonstração abre com dados fictícios. Em **Usar meus dados**, os registros
 - **livekit/agents** — 14.886 estrelas na consulta, versão 1.8.8, Apache-2.0. Worker Python e SDK de áudio no navegador.
 - Pipecat (16.700 estrelas) e Twenty (59.235) foram comparados; não foram incorporados, evitando dois motores de voz redundantes e uma troca desnecessária de CRM.
 
-Os códigos completos dos dois escolhidos estão em `../upstream/`, fora do pacote de publicação do frontend. `upstreams.lock.json` registra versões, commits, estrelas e licenças; `deploy/notices/` preserva os avisos.
+Esta cópia da Área de Trabalho contém a aplicação e os adaptadores próprios. Os clones integrais dos repositórios de terceiros não foram duplicados; suas origens e versões estão no arquivo de lock. `upstreams.lock.json` registra versões, commits, estrelas e licenças; `deploy/notices/` preserva os avisos.
 
 ## Ativar mensagens e voz reais
 
@@ -39,7 +39,7 @@ Consulte [docs/CENTRAL-DE-CONTATO.md](docs/CENTRAL-DE-CONTATO.md). O pacote incl
 
 É necessário configurar Chatwoot, mapear o usuário a uma conta, informar as credenciais no servidor, conectar canais e provisionar LiveKit/SIP. O texto depende de um endpoint de chat completions; a configuração de voz usa LiveKit Inference. Nenhuma chave deve ser digitada em registros do CRM ou enviada pelo chat de suporte.
 
-Limites atuais: a caixa integrada consulta a primeira página de conversas e mensagens do Chatwoot; criação de contatos/conversas e navegação por histórico antigo continuam no Chatwoot. Campanhas externas em massa, Google Ads, publicação social, emissão fiscal, pagamentos, assinatura, roteamento telefônico de entrada e discagem preditiva não estão implementados. Rascunhos não são exibidos como mensagens enviadas.
+A caixa integrada permite criar contatos/conversas, paginar conversas e carregar mensagens antigas, conforme as regras de cada canal conectado. Campanhas externas em massa, Google Ads, publicação social, emissão fiscal, pagamentos, assinatura, roteamento telefônico de entrada e discagem preditiva não estão implementados. Rascunhos não são exibidos como mensagens enviadas.
 
 ## Verificar
 

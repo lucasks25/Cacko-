@@ -44,6 +44,8 @@ export default defineConfig(async ({ command }) => {
   const { cloudflare } = await import("@cloudflare/vite-plugin");
 
   return {
+    // LiveKit (~530 kB) is already loaded on demand only on the calls page.
+    build: { chunkSizeWarningLimit: 600 },
     server: {
       ...(managedLinux
         ? { host: "0.0.0.0", allowedHosts: ["terminal.local"] }

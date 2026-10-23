@@ -50,3 +50,8 @@ yarn-error.log*
 **/*.sqlite
 **/*.sqlite-shm
 **/*.sqlite-wal
+
+# Ruflo/Claude Flow local state
+/.claude-flow/
+/.swarm/
+ruvector.db

@@ -40,3 +40,23 @@ export function prepareToolRecord(tool:string,input:Record<string,any>,rows:Enti
  if(tool==='shift'&&(!/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(data.start)||!/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(data.end)))throw new Error('Confira os horários.');
  const clean=validateEntity(tool,data);validateReferences(tool,clean,rows);return {type:tool as EntityType,data:clean};
 }
+const INTENTS:Record<string,{tool:string;pattern:RegExp}[]>={
+ waz:[{tool:'proposal',pattern:/\b(propost|orcament|cotac)/}],
+ maky:[{tool:'content',pattern:/\b(post|conteud|legenda|anuncio|campanha|blog|instagram|linkedin|copy)/}],
+ fin:[{tool:'transaction',pattern:/\b(lanc|registr|despesa|receita|saida|entrada|boleto|pagament|recebiment|fatura)|r\$/}],
+ opy:[{tool:'shift',pattern:/\b(turno|escala|plantao|jornada|expediente)/}],
+ juri:[{tool:'renewal',pattern:/\brenov/},{tool:'contract',pattern:/\b(contrat|clausula|extra[ci])/}],
+ pipo:[{tool:'article',pattern:/\b(organiz|document|artigo|procedimento|registr|cadastr)/},{tool:'wiki-answer',pattern:/\?\s*$|^(qual|quais|como|onde|quando|quem|por que|o que|existe|temos|posso)\b/}]
+};
+/** Reconhece no chat livre um pedido que corresponde a uma tarefa do agente. Só abre a tarefa; gerar e salvar continuam exigindo revisão. */
+export function matchAgentTool(agent:string,text:string):string|null{
+ const normalized=text.normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().trim();
+ if(normalized.length<8)return null;
+ return INTENTS[agent]?.find(i=>i.pattern.test(normalized))?.tool??null;
+}
+/** Pré-seleciona registros citados pelo nome no pedido do chat; o usuário ainda confere antes de gerar. */
+export function preselectFromPrompt(tool:string,prompt:string,rows:Entity[]):{productIds:string[];leadId:string;contractId:string}{
+ const norm=(s:unknown)=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().trim();
+ const text=norm(prompt);const cited=(type:string)=>rows.filter(e=>e.type===type&&!e.deleted&&norm(e.data.name).length>=3&&text.includes(norm(e.data.name)));
+ return {productIds:tool==='proposal'?cited('product').slice(0,50).map(e=>e.id):[],leadId:tool==='proposal'?cited('lead')[0]?.id||'':'',contractId:tool==='renewal'?cited('contract')[0]?.id||'':''};
+}

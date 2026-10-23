@@ -128,3 +128,18 @@ As opções de tarefa abrem um painel dentro do agente. Revisar e salvar não re
 O histórico inclui os campos estruturados revisados e um resumo do texto. Conteúdos extensos são limitados e identificados como resumo. Se o registro for salvo e a gravação do histórico falhar, a interface informa a falha parcial e não oferece salvar o registro novamente. A persistência das duas entradas não é uma transação única.
 
 A referência pública do Squad anuncia agentes que executam tarefas, mas não revela o comportamento autenticado de cada clique. Este ajuste corrige o fluxo da implementação própria; não comprova reprodução integral do produto.
+
+## Entrada única de leads (24h)
+
+Cada mensagem recebida no Chatwoot (WhatsApp, Instagram, site etc.) é repassada pelo serviço para `POST /api/crm/intake` do Site. Lá, o contato é encontrado ou criado sem duplicar, qualificado, distribuído por rodízio, colocado no funil, recebe uma tarefa de resposta e a mensagem fica no histórico. Mensagens repetidas (mesmo `messageId`) são ignoradas.
+
+Configuração no servidor, sem credenciais em arquivos versionados:
+
+1. Defina `CRM_INTAKE_SECRET` (mín. 32 caracteres) **no Site e no serviço** com o mesmo valor.
+2. No serviço, defina `CRM_INTAKE_URL` com `https://<seu-site>/api/crm/intake`.
+3. Em `TENANTS_JSON`, inclua `"crm_owner": "<ID do usuário no Site>"` no tenant.
+4. No Chatwoot, o webhook da conta precisa enviar o evento `message_created`.
+
+Formulário do site: em **Integrações → Formulário do site**, ative o formulário e cole o código gerado. A chave do formulário identifica a conta e pode ser trocada a qualquer momento.
+
+Limite: enquanto a publicação for privada, chamadas externas (serviço e formulário) não alcançam a rota. É preciso liberar somente `/api/crm/intake` na hospedagem ou receber pelo próprio serviço.

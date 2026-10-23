@@ -122,4 +122,21 @@ class APITests(unittest.TestCase):
   self.assertEqual(r.status_code,422)
  def test_webhook_without_per_tenant_secret_is_rejected(self):
   self.assertEqual(client.post('/webhooks/chatwoot/alice',json={'event':'message_created'}).status_code,401)
+class CRMIntakeTests(unittest.TestCase):
+ def test_only_customer_messages_are_forwarded_with_contact_data(self):
+  from app.policy import crm_intake_message
+  payload={'event':'message_created','message_type':'incoming','id':77,'content':'Quanto custa?','sender':{'name':'Carla','phone_number':'+5511977771234'},'conversation':{'id':9,'channel':'Channel::Whatsapp'}}
+  self.assertEqual(crm_intake_message(payload),{'channel':'Whatsapp','name':'Carla','phone':'+5511977771234','email':'','handle':'','text':'Quanto custa?','conversationId':'9','messageId':'77'})
+  self.assertIsNone(crm_intake_message({**payload,'message_type':'outgoing'}))
+  self.assertIsNone(crm_intake_message({**payload,'private':True}))
+  self.assertIsNone(crm_intake_message({**payload,'event':'conversation_updated'}))
+ def test_forward_uses_server_secret_and_never_raises(self):
+  from app.main import forward_to_crm
+  seen=[]
+  def handler(request):seen.append(request);return httpx.Response(500)
+  values={'CRM_INTAKE_URL':'https://crm.example/api/crm/intake','CRM_INTAKE_SECRET':'k'*40}
+  async def run():
+   async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as c:await forward_to_crm('owner-1',{'text':'oi'},client=c)
+  with patch.dict(settings.values,values):asyncio.run(run())
+  self.assertEqual(seen[0].headers['authorization'],'Bearer '+'k'*40);self.assertEqual(json.loads(seen[0].content),{'owner':'owner-1','message':{'text':'oi'}})
 if __name__=='__main__':unittest.main()
